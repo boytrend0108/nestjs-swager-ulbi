@@ -4,6 +4,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcryptjs'
 import { User } from 'src/users/user.model';
+import { toDefaultValue } from 'sequelize/types/utils';
 
 @Injectable()
 export class AuthService {
@@ -39,9 +40,14 @@ export class AuthService {
 
   private async validateUser(dto: CreateUserDto) {
     const user = await this.userService.getUsersByEmail(dto.email);
+
+    if (!user) {
+      throw new UnauthorizedException({ message: 'Wront email or password' })
+    }
+
     const passwordEqual = await bcrypt.compare(dto.password, user.password);
 
-    if (user && passwordEqual) {
+    if (passwordEqual) {
       return user;
     }
 
